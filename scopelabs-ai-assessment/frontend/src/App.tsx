@@ -26,9 +26,13 @@ function AppContent() {
       if (decoded) {
         setSharedData(decoded);
         setStep('results');
+
+        // Clean up the URL to prevent re-processing and Keep URL clean
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
-  }, [setStep, setSharedData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run exactly once on initial mount
 
   return (
     <Layout>

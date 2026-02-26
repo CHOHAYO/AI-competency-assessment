@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 interface UserInfo {
   name: string;
@@ -63,30 +63,30 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('scopelabs-assessment', JSON.stringify(state));
   }, [state]);
 
-  const setStep = (step: AssessmentState['step']) => {
+  const setStep = useCallback((step: AssessmentState['step']) => {
     setState((prev) => ({ ...prev, step }));
-  };
+  }, []);
 
-  const setUserInfo = (info: UserInfo) => {
+  const setUserInfo = useCallback((info: UserInfo) => {
     setState((prev) => ({ ...prev, userInfo: info }));
-  };
+  }, []);
 
-  const setAnswer = (questionId: number, score: number) => {
+  const setAnswer = useCallback((questionId: number, score: number) => {
     setState((prev) => ({
       ...prev,
       answers: { ...prev.answers, [questionId]: score },
     }));
-  };
+  }, []);
 
-  const setCurrentQuestionIndex = (index: number) => {
+  const setCurrentQuestionIndex = useCallback((index: number) => {
     setState((prev) => ({ ...prev, currentQuestionIndex: index }));
-  };
+  }, []);
 
-  const setSessionId = (id: string | null) => {
+  const setSessionId = useCallback((id: string | null) => {
     setState((prev) => ({ ...prev, sessionId: id }));
-  };
+  }, []);
 
-  const resetAssessment = () => {
+  const resetAssessment = useCallback(() => {
     const newState: AssessmentState = {
       step: 'landing',
       userInfo: { name: '', email: '' },
@@ -97,7 +97,7 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
     setState(newState);
     setSharedData(null);
     localStorage.removeItem('scopelabs-assessment');
-  };
+  }, []);
 
   return (
     <AssessmentContext.Provider
