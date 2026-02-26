@@ -188,6 +188,7 @@ app.post('/api/diagnosis/submit', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+const HOST = '0.0.0.0';
+app.listen(PORT as number, HOST, () => {
+  console.log(`🚀 Server running on http://${HOST}:${PORT}`);
 });
