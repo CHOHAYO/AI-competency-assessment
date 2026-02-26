@@ -1,4 +1,4 @@
-import { AssessmentState, SharedData } from '../context/AssessmentContext';
+import { AssessmentState, SharedData, UserInfo } from '../context/AssessmentContext';
 
 // Only encode necessary data to keep URL short
 interface UrlData {
@@ -6,16 +6,18 @@ interface UrlData {
   a: Record<number, number>; // answers
 }
 
-export const encodeData = (userInfo: AssessmentState['userInfo'], answers: AssessmentState['answers']): string => {
+export const encodeData = (userInfo: UserInfo, answers: Record<number, number>): string => {
   const data: UrlData = {
     n: userInfo.name,
     a: answers
   };
-  
+
   try {
     const jsonString = JSON.stringify(data);
-    // Simple Base64 encoding. For production, consider compression like lz-string
-    return btoa(encodeURIComponent(jsonString));
+    // Base64 encode the URI component encoded string (handles Korean)
+    const base64Data = btoa(encodeURIComponent(jsonString));
+    // URL encode the Base64 string so characters like +, /, = are safe in the query string
+    return encodeURIComponent(base64Data);
   } catch (e) {
     console.error('Failed to encode data', e);
     return '';
@@ -24,15 +26,19 @@ export const encodeData = (userInfo: AssessmentState['userInfo'], answers: Asses
 
 export const decodeData = (encoded: string): SharedData | null => {
   try {
-    const jsonString = decodeURIComponent(atob(encoded));
+    // Decode the URL encoded Base64 string first
+    const base64Data = decodeURIComponent(encoded);
+    // Decode Base64 back to URI component encoded string
+    const jsonString = decodeURIComponent(atob(base64Data));
+
     const data: UrlData = JSON.parse(jsonString);
-    
+
     return {
-      userInfo: { 
-        name: data.n, 
-        email: '', 
-        // Add default values for required fields if any, or optional fields
-      } as any, // Type assertion to bypass strict checks for optional fields if needed, but UserInfo has optional fields except name/email
+      userInfo: {
+        name: data.n,
+        email: '',
+        // Add default values for required fields
+      } as UserInfo,
       answers: data.a
     };
   } catch (e) {
