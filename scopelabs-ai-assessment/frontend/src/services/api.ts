@@ -11,50 +11,15 @@ export interface UserInfo {
   marketing?: boolean;
 }
 
-export const startDiagnosis = async (userInfo: UserInfo): Promise<{ session_id: string }> => {
-  const response = await fetch(`${API_BASE_URL}/diagnosis/start`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userInfo),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to start diagnosis');
-  }
-
-  return response.json();
-};
-
-export const updateProgress = async (sessionId: string, questionId: number, answerValue: number): Promise<{ success: boolean }> => {
-  const response = await fetch(`${API_BASE_URL}/diagnosis/progress`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      session_id: sessionId,
-      question_id: questionId,
-      answer_value: answerValue
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to update progress');
-  }
-
-  return response.json();
-};
-
-export const submitDiagnosis = async (sessionId: string, resultData: any): Promise<{ success: boolean; data: any }> => {
+export const saveAssessment = async (data: { userInfo: UserInfo, answers: Record<string, number>, result_data: any }): Promise<{ success: boolean; session_id: string; data: any }> => {
   const response = await fetch(`${API_BASE_URL}/diagnosis/submit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      session_id: sessionId,
-      result_data: resultData
-    }),
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to submit diagnosis');
+    throw new Error('Failed to save assessment');
   }
 
   return response.json();

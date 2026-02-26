@@ -5,7 +5,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/Card';
 import { Loader2 } from 'lucide-react';
-import { startDiagnosis } from '../services/api';
+
 
 const jobOptions: Record<string, string[]> = {
   '마케팅': ['퍼포먼스 마케팅', '콘텐츠 마케팅', '브랜드 마케팅', '그로스 마케팅', 'CRM 마케팅'],
@@ -42,18 +42,11 @@ export function UserInfoForm() {
 
     setIsLoading(true);
 
-    try {
-      // Call backend API to start Diagnosis & create Session
-      const { session_id } = await startDiagnosis(userInfo);
-      setSessionId(session_id);
-
+    // Data is gathered, just proceed to the assessment step
+    setTimeout(() => {
       setIsLoading(false);
       setStep('assessment');
-    } catch (error) {
-      console.error('Failed to start diagnosis:', error);
-      alert('서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
-      setIsLoading(false);
-    }
+    }, 400);
   };
 
   const handleChange = (field: string, value: string | boolean) => {

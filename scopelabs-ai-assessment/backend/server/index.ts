@@ -84,10 +84,15 @@ const Session = mongoose.model('Session', sessionSchema);
 // API Routes
 // ==========================================
 
-// 1. POST /api/diagnosis/start
-app.post('/api/diagnosis/start', async (req, res) => {
+// 1. POST /api/diagnosis/submit
+// Saves the entire assessment (userInfo, answers, and result) in one go
+app.post('/api/diagnosis/submit', async (req, res) => {
   try {
-    const userInfo = req.body;
+    const { userInfo, answers, result_data } = req.body;
+
+    if (!userInfo || !answers || !result_data) {
+      return res.status(400).json({ error: 'Missing required data fields' });
+    }
 
     // Generate a unique session ID
     const sessionId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -107,83 +112,21 @@ app.post('/api/diagnosis/start', async (req, res) => {
     const session = new Session({
       sessionId,
       userInfo: processedUserInfo,
-      answers: {},
-      status: 'in-progress'
+      answers,
+      status: 'completed',
+      result: result_data
     });
 
     await session.save();
 
-    res.status(201).json({ session_id: sessionId });
-  } catch (error) {
-    console.error('Error starting diagnosis:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.toString() });
-  }
-});
-
-
-// 2. PUT /api/diagnosis/progress
-app.put('/api/diagnosis/progress', async (req, res) => {
-  try {
-    const { session_id, question_id, answer_value } = req.body;
-
-    if (!session_id || question_id === undefined || answer_value === undefined) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Find the session and update the specific answer
-    const session = await Session.findOne({ sessionId: session_id });
-
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-
-    // Update the answers map
-    session.answers.set(question_id.toString(), answer_value);
-    await session.save();
-
-    res.status(200).json({ success: true });
-  } catch (error) {
-    console.error('Error updating progress:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
-// 3. POST /api/diagnosis/submit
-// For calculation, we need access to the questions and recommendations data.
-// In a real app, this might be imported or fetched from a DB.
-// Since it's currently hardcoded in the frontend, we will let the frontend calculate the result and pass it during submit,
-// OR we can replicate the calculation here. Let's accept the calculated result from the frontend to keep it perfectly synced.
-app.post('/api/diagnosis/submit', async (req, res) => {
-  try {
-    const { session_id, result_data } = req.body;
-
-    if (!session_id) {
-      return res.status(400).json({ error: 'Missing session_id' });
-    }
-
-    const session = await Session.findOne({ sessionId: session_id });
-
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
-
-    session.status = 'completed';
-
-    if (result_data) {
-      session.result = result_data;
-    }
-
-    await session.save();
-
-    // The frontend expects the response to match the spec
     res.status(200).json({
       success: true,
+      session_id: sessionId,
       data: session.result
     });
   } catch (error) {
     console.error('Error submitting diagnosis:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: error.toString() });
   }
 });
 

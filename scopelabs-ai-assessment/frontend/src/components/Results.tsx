@@ -7,7 +7,7 @@ import { SCOPELABS_COURSE_URL } from '../constants';
 import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { encodeData } from '../utils/share';
-import { submitDiagnosis } from '../services/api';
+import { saveAssessment } from '../services/api';
 import {
   Radar,
   RadarChart,
@@ -33,6 +33,7 @@ export function Results() {
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(true);
   const resultRef = useRef<HTMLDivElement>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const isSavedRef = useRef(false);
 
   // Use shared data if available, otherwise use context data
   const userInfo = sharedData ? sharedData.userInfo : contextUserInfo;
@@ -87,8 +88,9 @@ export function Results() {
 
   useEffect(() => {
     // Save data only if it's not shared data (i.e., it's a new assessment)
-    // and we haven't started saving yet
-    if (!sharedData && !isSaving && sessionId) {
+    // and we haven't started saving yet (prevent React StrictMode double effect)
+    if (!sharedData && !isSavedRef.current) {
+      isSavedRef.current = true;
       const saveData = async () => {
         setIsSaving(true);
         try {
@@ -100,9 +102,16 @@ export function Results() {
             recommendations
           };
 
-          await submitDiagnosis(sessionId, resultData);
+          await saveAssessment({
+            userInfo,
+            answers,
+            result_data: resultData
+          });
         } catch (error) {
           console.error('Failed to save assessment result:', error);
+          isSavedRef.current = false; // Allow retry on failure
+        } finally {
+          setIsSaving(false);
         }
       };
 
