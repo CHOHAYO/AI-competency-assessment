@@ -56,17 +56,10 @@ const sessionSchema = new mongoose.Schema({
     totalScore: Number,
     level: String,
     comment: String,
-    recommendations: [{
-      category: String,
-      courses: [{
-        title: String,
-        link: String,
-        level: String,
-        type: String,
-        duration: String,
-        desc: String
-      }]
-    }]
+    recommendations: {
+      type: mongoose.Schema.Types.Mixed,
+      default: []
+    }
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
